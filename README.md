@@ -1,5 +1,7 @@
 # Kubernetes Workshop
 
+https://git.dartmouth.edu/research-itc-public/kubernetes-workshop
+
 ```text
 Introduction to Container Automation and Orchestration with Kubernetes
 Instructors: Jonathan Crossett / Elijah Gagne - Research Computing
@@ -13,13 +15,14 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
 
 * Kubernetes Overview
   * "The car, not the destination"
-* Working with `minikube`
+* Working with `minikube` (VM behind the scenes)
     ```shell
     minikube start --cni=calico # Create cluster
     minikube stop               # Stop cluster
     minikube start              # Start cluster
     minikube status             # Check cluster status
     minikube node add           # Add node
+    minikube node list          # List node
     minikube ip                 # Get IP address for primary node
     minikube ip -n minikube-m02 # Get IP address for specific node
     # minikube delete             # Delete cluster
@@ -50,6 +53,7 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
   * Using curl
     ```shell
     APISERVER="https://$(minikube ip):8443"
+    echo $APISERVER
     TOKEN=$(kubectl -n kube-system get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='default')].data.token}"|base64 --decode)
     echo $TOKEN
     curl -k -X GET $APISERVER/version -H "Authorization: Bearer $TOKEN" 
@@ -66,7 +70,7 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
     kubectl cordon minikube                                # Cordon control-plane node for demos
     ```
   * Node components
-    * kubelet (containers, logs)
+    * kubelet (containers, logs, Desired State)
     * kube-proxy (service ip routing)
     * Container runtime
   * Controlplane
@@ -91,13 +95,12 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
     kubectl cluster-info dump | grep -m 1 service-cluster-ip-range
     kubectl cluster-info dump | grep -m 1 cluster-cidr
     ```
-* Container Storage Interface (CSI) (https://kubernetes.io/blog/2019/01/15/container-storage-interface-ga/)
+* Container Storage Interface (CSI) (https://kubernetes.io/blog/2019/01/15/container-storage-interface-ga/, https://kubernetes-csi.github.io/docs/drivers.html)
     ```shell
     kubectl get storageclass
     kubectl -n kube-system get pod | grep storage-provisioner
     ```
-* PersistentVolume/PersistentVolumeClaim
-  * DOCS: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+* PersistentVolume/PersistentVolumeClaim (https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
   * Create PersistentVolumeClaim
     ```shell
     kubectl apply -f pvc.yml
@@ -122,6 +125,7 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
   * Interact with pod
     ```shell
     kubectl exec -ti pod-test -- sh  # Execute command in pod
+      df -h
       echo "<h1>Hello from the volume</h1>" > /usr/share/nginx/html/volume/index.html
       echo "<h1>Hello from local storage</h1>" > /usr/share/nginx/html/index.html
       exit
@@ -130,6 +134,7 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
     minikube ssh curl $IP/volume/
     minikube ssh curl $IP             # Can access the cluster IP inside the cluster
     kubectl delete pod pod-test
+    kubectl get pod
     kubectl apply -f pod-with-pvc.yml # Recreate pod
     kubectl get pod -o wide           # IP Address changes
     IP=$(kubectl get pod pod-test -o jsonpath='{.status.podIP}')
@@ -182,14 +187,6 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
     kubectl scale deployment php-apache --replicas 1
     kubectl get pod
     ```
-* ReplicaSet (https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/)
-    ```shell
-    kubectl get replicaset  # Automatically created for us
-    ```
-* DeamonSet (https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
-  * https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#writing-a-daemonset-spec
-* StatefulSet (https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
-  * https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components
 * Secrets (https://kubernetes.io/docs/concepts/configuration/secret/)
     ```shell
     kubectl create secret generic -h
@@ -205,8 +202,6 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
     kubectl get pod
     curl $(minikube ip):$PORT/env.php
     ```
-* Network Policies (https://kubernetes.io/docs/concepts/services-networking/network-policies/)
-  * https://kubernetes.io/docs/concepts/services-networking/network-policies/#networkpolicy-resource
 * Namespace (https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
   * Manage namespaces
     ```shell
@@ -230,6 +225,16 @@ Please install minikube (https://minikube.sigs.k8s.io/docs/start/) before the wo
     kubectl -n mynamespace get pod
     kubectl get namespace
     ```
+* ReplicaSet (https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/)
+    ```shell
+    kubectl get replicaset  # Automatically created for us
+    ```
+* DeamonSet (https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/)
+  * https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#writing-a-daemonset-spec
+* StatefulSet (https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
+  * https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#components
+* Network Policies (https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+  * https://kubernetes.io/docs/concepts/services-networking/network-policies/#networkpolicy-resource
 * Static Pod (https://kubernetes.io/docs/tasks/configure-pod-container/static-pod/)
     ```shell
     minikube ssh

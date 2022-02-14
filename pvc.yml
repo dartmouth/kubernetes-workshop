@@ -5,7 +5,7 @@ metadata:
   name: standard-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOnce    # ReadWriteOnce, ReadOnlyMany, ReadWriteMany, ReadWriteOncePod
   storageClassName: standard
   resources:
     requests:

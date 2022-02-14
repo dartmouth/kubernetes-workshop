@@ -6,16 +6,16 @@ metadata:
   labels:
     app: pod-test
 spec:
+  volumes:
+  - name: vol
+    persistentVolumeClaim:
+      claimName: standard-pvc
   containers:
   - name: pod-test
     image: nginx:stable-alpine
     imagePullPolicy: IfNotPresent
     volumeMounts:
-    - name: volv
+    - name: vol
       mountPath: /usr/share/nginx/html/volume
     ports:
     - containerPort: 80
-  volumes:
-  - name: volv
-    persistentVolumeClaim:
-      claimName: standard-pvc
